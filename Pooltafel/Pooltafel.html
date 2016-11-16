@@ -17,7 +17,7 @@
 <body>
     <script src="three.min.js"></script>
     <script src="OrbitControls.js"></script>
-    <script src="ClassBalls.js"></script>
+    <script src="ball.js"></script>
     <script>
         var camera, controls, scene, renderer, whiteBall, redBall, wbDirection, speed, clock, raycaster, borderGroup, xPosW, zPosW, xPosR, zPosR;
         init();
@@ -52,36 +52,43 @@
             controls.enableZoom = false;
 
             //ground
-            var gMaterial = new THREE.MeshLambertMaterial({color: 0xffffff});
             var gGeometry = new THREE.PlaneBufferGeometry(50,50,1,1);
+            var gMaterial = new THREE.MeshPhongMaterial({color: 0xffffff});
             var ground = new THREE.Mesh(gGeometry, gMaterial);
             ground.rotation.x = -0.5*Math.PI;
             ground.position.y = 3;
+            ground.receiveShadow = true;
             scene.add(ground);
 
             //bottom Pooltable
             var bptTexture = new THREE.ImageUtils.loadTexture("Textures/Black.jpg");
             var bptGeometry = new THREE.BoxGeometry(10,5,20);
-            var bptMaterial = new THREE.MeshLambertMaterial({map: bptTexture, side: THREE.DoubleSide});
+            var bptMaterial = new THREE.MeshPhongMaterial({map: bptTexture, side: THREE.DoubleSide});
             var bottomPooltable = new THREE.Mesh(bptGeometry, bptMaterial);
             bottomPooltable.position.y = 5;
+            bottomPooltable.receiveShadow = true;
+            bottomPooltable.castShadow = true;
             scene.add(bottomPooltable);
 
             //table sheet
             var tsTexture = new THREE.ImageUtils.loadTexture("Textures/Blue.jpg");
-            var tsMaterial =  new THREE.MeshLambertMaterial({map:tsTexture, side: THREE.DoubleSide});
+            var tsMaterial =  new THREE.MeshPhongMaterial({map:tsTexture, side: THREE.DoubleSide});
             var tsGeometry = new THREE.BoxGeometry(14,1,24);
             var tableSheet = new THREE.Mesh(tsGeometry, tsMaterial);
             tableSheet.position.y = 8;
+            tableSheet.receiveShadow = true;
+            tableSheet.castShadow = true;
             borderGroup.add(tableSheet);
 
             //tableBorder Vertical
             var tbvTexture = new THREE.ImageUtils.loadTexture("Textures/Wood.jpg");
-            var tbvMaterial = new THREE.MeshLambertMaterial({map: tbvTexture, side: THREE.DoubleSide});
+            var tbvMaterial = new THREE.MeshPhongMaterial({map: tbvTexture, side: THREE.DoubleSide});
             var tbvGeometry = new THREE.BoxGeometry(1,1,24);
             var tableBorderV = new THREE.Mesh(tbvGeometry, tbvMaterial);
             tableBorderV.position.y = 9;
             tableBorderV.position.x = -6.5;
+            tableBorderV.receiveShadow = true;
+            tableBorderV.castShadow = true;
             borderGroup.add(tableBorderV);
             var clonedTableBorderV = tableBorderV.clone();
             clonedTableBorderV.position.x = 6.5;
@@ -89,11 +96,13 @@
 
             //tableBorder Horizontal
             var tbhTexture = new THREE.ImageUtils.loadTexture("Textures/Wood.jpg");
-            var tbhMaterial = new THREE.MeshLambertMaterial({map: tbhTexture, side: THREE.DoubleSide});
+            var tbhMaterial = new THREE.MeshPhongMaterial({map: tbhTexture, side: THREE.DoubleSide});
             var tbhGeometry = new THREE.BoxGeometry(12,1,1);
             var tableBorderH = new THREE.Mesh(tbhGeometry, tbhMaterial);
             tableBorderH.position.y = 9;
             tableBorderH.position.z = 11.5;
+            tableBorderH.receiveShadow = true;
+            tableBorderH.castShadow = true;
             borderGroup.add(tableBorderH);
             var clonedTableBorderH = tableBorderH.clone();
             clonedTableBorderH.position.z = -11.5;
@@ -107,30 +116,28 @@
             chalk.position.y = 9.75;
             chalk.position.z = 11.325;
             chalk.position.x = 5
+            chalk.receiveShadow = true;
+            chalk.castShadow = true;
             scene.add(chalk);
 
             //LIGHTS
-                //Ambient Light
-            scene.add(new THREE.AmbientLight(0xffffff));
-                //SpotLights
+            //Hemisphere
+            var hemisphere = new THREE.HemisphereLight();
+            hemisphere.color.setHSL( 0, 1, 0.95);
+            hemisphere.groundColor.setHSL( 0.43, 0.46, 1 );
+            hemisphere.intensity = 0.2;
+            hemisphere.position.set( 0, 100, 0 );
+            scene.add(hemisphere);
+
+            //SpotLights
             var light1Texture = new THREE.ImageUtils.loadTexture("Textures/Lamp.jpg")
             var light1Geometry = new THREE.CylinderGeometry(0.5,3,3,32,32);
             var light1Material = new THREE.MeshPhongMaterial({map: light1Texture, side: THREE.DoubleSide});
-            var light1 = new THREE.PointLight(0xff0000,1.5,100);
+            var light1 = new THREE.SpotLight(0xffffff,5,40,0.7);
             light1.add(new THREE.Mesh(light1Geometry, light1Material));
-            light1.position.set(0,20,0);
+            light1.position.set(0,40,0);
+            light1.castShadow = true;
             scene.add(light1);
-
-            // Redball
-            var pbGeometry = new THREE.SphereGeometry(0.3,10,10);
-            var pbMaterial = new THREE.MeshPhongMaterial({color: 0xff0000});
-            redBall = new THREE.Mesh(pbGeometry, pbMaterial);
-            redBall.position.y = 9;
-            redBall.position.z = -3;
-            redBall.position.x = 0;
-            xPosR = redBall.position.x;
-            zPosR = redBall.position.z;
-            scene.add(redBall);
 
 
             // move Whiteball
@@ -182,6 +189,8 @@
             keu.position.y = 10.5;
             keu.position.z = 12.5;
             keu.rotation.x = -0.6*Math.PI;
+            keu.castShadow = true;
+            keu.receiveShadow = true;
             scene.add(keu);
 
             //raycaster
