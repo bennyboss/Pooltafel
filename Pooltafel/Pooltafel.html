@@ -19,7 +19,7 @@
     <script src="OrbitControls.js"></script>
     <script src="ball.js"></script>
     <script>
-        var camera, controls, scene, renderer, whiteBall, redBall, wbDirection, speed, clock, raycaster, borderGroup, xPosW, zPosW, xPosR, zPosR;
+        var camera, controls, scene, renderer, whiteBall, wbDirection, speed, clock, raycaster, borderGroup, xPosW, zPosW, xPosR, zPosR;
         init();
         animate();
 
@@ -138,7 +138,7 @@
             light1.position.set(0,40,0);
             light1.castShadow = true;
             scene.add(light1);
-            
+
             // move Whiteball
             wbDirection = new THREE.Vector3();
             wbDirection.z = -1;
