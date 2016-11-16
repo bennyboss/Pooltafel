@@ -121,18 +121,6 @@
             light1.position.set(0,20,0);
             scene.add(light1);
 
-            // Redball
-            var pbGeometry = new THREE.SphereGeometry(0.3,10,10);
-            var pbMaterial = new THREE.MeshPhongMaterial({color: 0xff0000});
-            redBall = new THREE.Mesh(pbGeometry, pbMaterial);
-            redBall.position.y = 9;
-            redBall.position.z = -3;
-            redBall.position.x = 0;
-            xPosR = redBall.position.x;
-            zPosR = redBall.position.z;
-            scene.add(redBall);
-
-
             // move Whiteball
             wbDirection = new THREE.Vector3();
             wbDirection.z = -1;
@@ -146,21 +134,21 @@
             var balls = [];
             var positions =
                     [
-                        {x:0, z: -3},
-                        {x:1, z: -4},
-                        {x:2, z: -5},
-                        {x:3, z: -6},
-                        {x:4, z: -7},
-                        {x:-1, z: -3},
-                        {x:-2, z: -4},
-                        {x:-3, z: -5},
-                        {x:-4, z: -6},
-                        {x:1, z: -1},
-                        {x:1, z: -1},
-                        {x:1, z: -1},
-                        {x:1, z: -1},
-                        {x:1, z: -1},
-                        {x:1, z: -1}
+                        {x:0, z: -6},
+                        {x:0.5, z: -6.5},
+                        {x:1, z: -7},
+                        {x:1.5, z: -7.5},
+                        {x:2, z: -8},
+                        {x:0.5, z: -7.5},
+                        {x:-0.5, z: -7.5},
+                        {x:1, z: -8},
+                        {x:0, z: -8},
+                        {x:-1, z: -8},
+                        {x:0, z: -7},
+                        {x:-0.5, z: -6.5},
+                        {x:-1, z: -7},
+                        {x:-1.5, z: -7.5},
+                        {x:-2, z: -8}
                     ];
 
             for(var i=0; i<15;i++)
