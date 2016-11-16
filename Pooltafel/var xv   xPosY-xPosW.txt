@@ -1,0 +1,15 @@
+                   var xv = xPosY-xPosW;
+                   var zv = zPosY-zPosW;
+                   var len = Math.pow(Math.pow(xv, 2) + Math.pow(zv, 2), 0.5);
+                   if(len < 0.5)
+                   {
+                     wy = true;
+                     len *= len;
+                     var factor = (xSpeedY-xSpeedW) * xv + (zSpeedY-zSpeedW) * zv;
+                     xv *= factor / len;
+                     zv *= factor / len;
+                     xSpeedY -= xv;
+                     zSpeedY -= zv;
+                     xSpeedW += xv;
+                     zSpeedW += zv;
+                   }

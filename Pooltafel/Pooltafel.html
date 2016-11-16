@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>pooltafel ffs 3</title>
+    <style>
+        Body{
+            width: 100%;
+            height: 100%;
+            margin: 0;
+        }
+        *{
+            overflow-x: hidden;
+        }
+    </style>
+</head>
+<body>
+    <script src="three.min.js"></script>
+    <script src="OrbitControls.js"></script>
+    <script src="ClassBalls.js"></script>
+    <script>
+        var camera, controls, scene, renderer, whiteBall, redBall, wbDirection, speed, clock, raycaster, borderGroup, xPosW, zPosW, xPosR, zPosR;
+        init();
+        animate();
+
+
+        function init(){
+
+            //scene
+            scene = new THREE.Scene();
+            scene.fog = new THREE.FogExp2( 0xcccccc, 0.002 );
+
+            //camera
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000)
+            camera.position.z = 30;
+            camera.position.y = 20;
+
+            //renderer
+            renderer = new THREE.WebGLRenderer();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setClearColor( scene.fog.color );
+            document.body.appendChild(renderer.domElement);
+
+            //Group
+            borderGroup =  new THREE.Group();
+            scene.add(borderGroup);
+
+            //controls
+            controls = new THREE.OrbitControls( camera );
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.25;
+            controls.enableZoom = false;
+
+            //ground
+            var gMaterial = new THREE.MeshLambertMaterial({color: 0xffffff});
+            var gGeometry = new THREE.PlaneBufferGeometry(50,50,1,1);
+            var ground = new THREE.Mesh(gGeometry, gMaterial);
+            ground.rotation.x = -0.5*Math.PI;
+            ground.position.y = 3;
+            scene.add(ground);
+
+            //bottom Pooltable
+            var bptTexture = new THREE.ImageUtils.loadTexture("Textures/Black.jpg");
+            var bptGeometry = new THREE.BoxGeometry(10,5,20);
+            var bptMaterial = new THREE.MeshLambertMaterial({map: bptTexture, side: THREE.DoubleSide});
+            var bottomPooltable = new THREE.Mesh(bptGeometry, bptMaterial);
+            bottomPooltable.position.y = 5;
+            scene.add(bottomPooltable);
+
+            //table sheet
+            var tsTexture = new THREE.ImageUtils.loadTexture("Textures/Blue.jpg");
+            var tsMaterial =  new THREE.MeshLambertMaterial({map:tsTexture, side: THREE.DoubleSide});
+            var tsGeometry = new THREE.BoxGeometry(14,1,24);
+            var tableSheet = new THREE.Mesh(tsGeometry, tsMaterial);
+            tableSheet.position.y = 8;
+            borderGroup.add(tableSheet);
+
+            //tableBorder Vertical
+            var tbvTexture = new THREE.ImageUtils.loadTexture("Textures/Wood.jpg");
+            var tbvMaterial = new THREE.MeshLambertMaterial({map: tbvTexture, side: THREE.DoubleSide});
+            var tbvGeometry = new THREE.BoxGeometry(1,1,24);
+            var tableBorderV = new THREE.Mesh(tbvGeometry, tbvMaterial);
+            tableBorderV.position.y = 9;
+            tableBorderV.position.x = -6.5;
+            borderGroup.add(tableBorderV);
+            var clonedTableBorderV = tableBorderV.clone();
+            clonedTableBorderV.position.x = 6.5;
+            borderGroup.add(clonedTableBorderV);
+
+            //tableBorder Horizontal
+            var tbhTexture = new THREE.ImageUtils.loadTexture("Textures/Wood.jpg");
+            var tbhMaterial = new THREE.MeshLambertMaterial({map: tbhTexture, side: THREE.DoubleSide});
+            var tbhGeometry = new THREE.BoxGeometry(12,1,1);
+            var tableBorderH = new THREE.Mesh(tbhGeometry, tbhMaterial);
+            tableBorderH.position.y = 9;
+            tableBorderH.position.z = 11.5;
+            borderGroup.add(tableBorderH);
+            var clonedTableBorderH = tableBorderH.clone();
+            clonedTableBorderH.position.z = -11.5;
+            borderGroup.add(clonedTableBorderH);
+
+            // chalk
+            var cTexture = new THREE.ImageUtils.loadTexture("Textures/Chalk.jpg")
+            var cGeometry = new THREE.BoxGeometry(.5,.5,.5);
+            var cMaterial = new THREE.MeshPhongMaterial({map: cTexture, side: THREE.DoubleSide});
+            var chalk = new THREE.Mesh(cGeometry,cMaterial);
+            chalk.position.y = 9.75;
+            chalk.position.z = 11.325;
+            chalk.position.x = 5
+            scene.add(chalk);
+
+            //LIGHTS
+                //Ambient Light
+            scene.add(new THREE.AmbientLight(0xffffff));
+                //SpotLights
+            var light1Texture = new THREE.ImageUtils.loadTexture("Textures/Lamp.jpg")
+            var light1Geometry = new THREE.CylinderGeometry(0.5,3,3,32,32);
+            var light1Material = new THREE.MeshPhongMaterial({map: light1Texture, side: THREE.DoubleSide});
+            var light1 = new THREE.PointLight(0xff0000,1.5,100);
+            light1.add(new THREE.Mesh(light1Geometry, light1Material));
+            light1.position.set(0,20,0);
+            scene.add(light1);
+
+            // Redball
+            var pbGeometry = new THREE.SphereGeometry(0.3,10,10);
+            var pbMaterial = new THREE.MeshPhongMaterial({color: 0xff0000});
+            redBall = new THREE.Mesh(pbGeometry, pbMaterial);
+            redBall.position.y = 9;
+            redBall.position.z = -3;
+            redBall.position.x = 0;
+            xPosR = redBall.position.x;
+            zPosR = redBall.position.z;
+            scene.add(redBall);
+
+
+            // move Whiteball
+            wbDirection = new THREE.Vector3();
+            wbDirection.z = -1;
+            wbDirection.normalize();
+            speed = new THREE.Vector3();
+            clock = new THREE.Clock();
+
+            // Balls
+            whiteBall = new Ball(0,7.5, 0xffffff);
+
+            var balls = [];
+            var positions =
+                    [
+                        {x:0, z: -3},
+                        {x:1, z: -4},
+                        {x:2, z: -5},
+                        {x:3, z: -6},
+                        {x:4, z: -7},
+                        {x:-1, z: -3},
+                        {x:-2, z: -4},
+                        {x:-3, z: -5},
+                        {x:-4, z: -6},
+                        {x:1, z: -1},
+                        {x:1, z: -1},
+                        {x:1, z: -1},
+                        {x:1, z: -1},
+                        {x:1, z: -1},
+                        {x:1, z: -1}
+                    ];
+
+            for(var i=0; i<15;i++)
+            {
+                var position = positions[i];
+                balls.push(new Ball(
+                        x = position.x,
+                        z = position.z,
+                        color = 0xff0000
+                ))
+
+            }
+
+            // keu
+            var kTexture = new THREE.ImageUtils.loadTexture("Textures/keu.jpg")
+            var kGeometry = new THREE.CylinderGeometry(0.1,0.2,8,32,32);
+            var kMaterial = new THREE.MeshPhongMaterial({map: kTexture, side: THREE.DoubleSide});
+            var keu = new THREE.Mesh(kGeometry, kMaterial);
+            keu.position.y = 10.5;
+            keu.position.z = 12.5;
+            keu.rotation.x = -0.6*Math.PI;
+            scene.add(keu);
+
+            //raycaster
+            raycaster = new THREE.Raycaster();
+        }
+
+        function animate(){
+            requestAnimationFrame(animate);
+
+            //controls
+            controls.update();
+
+            //Move whiteBall
+            whiteBall.position.add(speed.copy(wbDirection).multiplyScalar(clock.getDelta()*10));
+            raycaster.set(whiteBall.position, wbDirection);
+            var intersections = raycaster.intersectObjects(borderGroup.children);
+            if(intersections.length > 0){
+                var intersection = intersections[0];
+                if(intersection.distance < 1){
+                    wbDirection.reflect(intersection.face.normal);
+                    wbDirection.y = 0;
+                }
+            }
+
+            // collision
+            var xv = xPosR-xPosW;
+            var zv = zPosR-zPosW;
+            var len = Math.pow(Math.pow(xv, 2) + Math.pow(zv, 2), 0.5);
+            if(len < 0.5)
+            {
+                len *= len;
+                var factor = (xSpeedY-xSpeedW) * xv + (zSpeedY-zSpeedW) * zv;
+                xv *= factor / len;
+                zv *= factor / len;
+                xSpeedY -= xv;
+                zSpeedY -= zv;
+                xSpeedW += xv;
+                zSpeedW += zv;
+            }
+
+            render();
+        }
+
+        function render(){
+
+            renderer.render(scene, camera);
+        }
+    </script>
+
+</body>
+</html>
