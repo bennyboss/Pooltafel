@@ -19,7 +19,7 @@
     <script src="OrbitControls.js"></script>
     <script src="ball.js"></script>
     <script>
-        var camera, controls, scene, renderer, whiteBall, redBall, wbDirection, speed, clock, raycaster, borderGroup, xPosW, zPosW, xPosR, zPosR;
+        var camera, controls, scene, renderer, whiteBall, wbDirection, speed, clock, raycaster, borderGroup, xPosW, zPosW, xPosR, zPosR;
         init();
         animate();
 
@@ -139,7 +139,6 @@
             light1.castShadow = true;
             scene.add(light1);
 
-
             // move Whiteball
             wbDirection = new THREE.Vector3();
             wbDirection.z = -1;
@@ -153,21 +152,21 @@
             var balls = [];
             var positions =
                     [
-                        {x:0, z: -3},
-                        {x:1, z: -4},
-                        {x:2, z: -5},
-                        {x:3, z: -6},
-                        {x:4, z: -7},
-                        {x:-1, z: -3},
-                        {x:-2, z: -4},
-                        {x:-3, z: -5},
-                        {x:-4, z: -6},
-                        {x:1, z: -1},
-                        {x:1, z: -1},
-                        {x:1, z: -1},
-                        {x:1, z: -1},
-                        {x:1, z: -1},
-                        {x:1, z: -1}
+                        {x:0, z: -6},
+                        {x:0.5, z: -6.5},
+                        {x:1, z: -7},
+                        {x:1.5, z: -7.5},
+                        {x:2, z: -8},
+                        {x:0.5, z: -7.5},
+                        {x:-0.5, z: -7.5},
+                        {x:1, z: -8},
+                        {x:0, z: -8},
+                        {x:-1, z: -8},
+                        {x:0, z: -7},
+                        {x:-0.5, z: -6.5},
+                        {x:-1, z: -7},
+                        {x:-1.5, z: -7.5},
+                        {x:-2, z: -8}
                     ];
 
             for(var i=0; i<15;i++)
