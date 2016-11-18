@@ -15,11 +15,13 @@
     </style>
 </head>
 <body>
+    <script src="KeyboardState.js"></script>
     <script src="three.min.js"></script>
     <script src="OrbitControls.js"></script>
     <script src="ball.js"></script>
+    <script src="hole.js"></script>
     <script>
-        var camera, controls, scene, renderer, whiteBall, wbDirection, speed, clock, raycaster, borderGroup, xPosW, zPosW, xPosR, zPosR;
+        var camera, controls, scene, renderer, clock, borderGroup, balls, keu, keyboard;
         init();
         animate();
 
@@ -139,19 +141,52 @@
             light1.castShadow = true;
             scene.add(light1);
 
-            // move Whiteball
-            wbDirection = new THREE.Vector3();
-            wbDirection.z = -1;
-            wbDirection.normalize();
-            speed = new THREE.Vector3();
+            // keu
+            var kTexture = new THREE.ImageUtils.loadTexture("Textures/keu.jpg")
+            var kGeometry = new THREE.CylinderGeometry(0.1,0.2,8,32,32);
+            var kMaterial = new THREE.MeshPhongMaterial({map: kTexture, side: THREE.DoubleSide});
+            keu = new THREE.Mesh(kGeometry, kMaterial);
+            keu.position.y = 10;
+            keu.position.z = 12.5;
+            keu.rotation.x = -0.5*Math.PI-0.2;
+            keu.castShadow = true;
+            keu.receiveShadow = true;
+            keu.angle = 0;
+            console.log(keu.angle);
+            scene.add(keu);
+
+            // Clock
             clock = new THREE.Clock();
 
-            // Balls
-            whiteBall = new Ball(0,7.5, 0xffffff);
+            // keyboard
+            keyboard = new THREEx.KeyboardState();
 
-            var balls = [];
+            //Holes
+            var holes = [];
+            var positionsH =
+                [
+                    { x: 0, z: 0 },
+                    { x: 0, z: 0 },
+                    { x: 0, z: 0 },
+                    { x: 0, z: 0 },
+                    { x: 0, z: 0 },
+                    { x: 0, z: 0 }
+                ];
+
+            for (var i=0; i<6;i++)
+            {
+                var position = positionsH[i];
+                holes.push(new Hole(
+                        x = position.x,
+                        z = position.z
+                ))
+            }
+
+            // Balls
+            balls = [];
             var positions =
                     [
+                        {x:0, z: 7.5},
                         {x:0, z: -6},
                         {x:0.5, z: -6.5},
                         {x:1, z: -7},
@@ -169,30 +204,16 @@
                         {x:-2, z: -8}
                     ];
 
-            for(var i=0; i<15;i++)
+            for(let i=0; i<16;i++)
             {
-                var position = positions[i];
+                let position = positions[i];
                 balls.push(new Ball(
-                        x = position.x,
-                        z = position.z,
-                        color = 0xff0000
-                ))
+                        position.x,
+                        position.z,
+                        i == 0 ? 0xffffff : 0xff0000
+                ));
+
             }
-
-            // keu
-            var kTexture = new THREE.ImageUtils.loadTexture("Textures/keu.jpg")
-            var kGeometry = new THREE.CylinderGeometry(0.1,0.2,8,32,32);
-            var kMaterial = new THREE.MeshPhongMaterial({map: kTexture, side: THREE.DoubleSide});
-            var keu = new THREE.Mesh(kGeometry, kMaterial);
-            keu.position.y = 10.5;
-            keu.position.z = 12.5;
-            keu.rotation.x = -0.6*Math.PI;
-            keu.castShadow = true;
-            keu.receiveShadow = true;
-            scene.add(keu);
-
-            //raycaster
-            raycaster = new THREE.Raycaster();
         }
 
         function animate(){
@@ -201,32 +222,85 @@
             //controls
             controls.update();
 
-            //Move whiteBall
-            whiteBall.position.add(speed.copy(wbDirection).multiplyScalar(clock.getDelta()*10));
-            raycaster.set(whiteBall.position, wbDirection);
-            var intersections = raycaster.intersectObjects(borderGroup.children);
-            if(intersections.length > 0){
-                var intersection = intersections[0];
-                if(intersection.distance < 1){
-                    wbDirection.reflect(intersection.face.normal);
-                    wbDirection.y = 0;
+            // collision balls
+            for(let i=0; i<16;i++)
+            {
+                let ball1 = balls[i];
+
+                for(let j= i+1; j<16;j++)
+                {
+                  let ball2 = balls[j];
+
+                    var xv = ball1.xPos - ball2.xPos;
+                    var zv = ball1.zPos - ball2.zPos;
+                    var len = Math.pow(Math.pow(xv, 2) + Math.pow(zv, 2), 0.5);
+                    if(len < 0.5)
+                    {
+                        len *= len;
+                        var factor = (ball1.xSpeed-ball2.xSpeed) * xv + (ball1.zSpeed - ball2.zSpeed) * zv;
+                        if(factor < 0) {
+                            xv *= factor / len;
+                            zv *= factor / len;
+                            ball1.xSpeed -= xv;
+                            ball1.zSpeed -= zv;
+                            ball2.xSpeed += xv;
+                            ball2.zSpeed += zv;
+                        }
+                    }
                 }
             }
 
-            // collision
-            var xv = xPosR-xPosW;
-            var zv = zPosR-zPosW;
-            var len = Math.pow(Math.pow(xv, 2) + Math.pow(zv, 2), 0.5);
-            if(len < 0.5)
+            var delta = clock.getDelta() * 10;
+            for(let i=0; i<16;i++)
             {
-                len *= len;
-                var factor = (xSpeedY-xSpeedW) * xv + (zSpeedY-zSpeedW) * zv;
-                xv *= factor / len;
-                zv *= factor / len;
-                xSpeedY -= xv;
-                zSpeedY -= zv;
-                xSpeedW += xv;
-                zSpeedW += zv;
+                let ball = balls[i];
+
+                if (ball.xPos < -5.5 && ball.xSpeed < 0)
+                {
+                    ball.xSpeed = -ball.xSpeed;
+                }
+
+                if (ball.xPos > 5.5 && ball.xSpeed > 0)
+                {
+                    ball.xSpeed = -ball.xSpeed;
+                }
+
+                if (ball.zPos < -5.5 && ball.zSpeed < 0)
+                {
+                    ball.zSpeed = -ball.zSpeed;
+                }
+
+                if (ball.zPos > 5.5 && ball.zSpeed > 0)
+                {
+                    ball.zSpeed = -ball.zSpeed;
+                }
+
+                // movement
+                ball.xPos += ball.xSpeed * delta;
+                ball.zPos += ball.zSpeed * delta;
+
+                //update position
+                ball.position.x = ball.xPos;
+                ball.position.z = ball.zPos;
+
+            }
+
+            //move keu
+            if(keyboard.pressed("D"))
+            {
+                keu.angle -= 0.015;
+                keu.rotateX(0.2);
+                keu.rotateZ(-0.015);
+                keu.rotateX(-0.2);
+                keu.position.set(balls[0].xPos+4.5*Math.sin(keu.angle), 10, balls[0].zPos+4.5*Math.cos(keu.angle));
+            }
+            if(keyboard.pressed("A"))
+            {
+                keu.angle += 0.015;
+                keu.rotateX(0.2);
+                keu.rotateZ(0.015);
+                keu.rotateX(-0.2);
+                keu.position.set(balls[0].xPos+4.5*Math.sin(keu.angle), 10, balls[0].zPos+4.5*Math.cos(keu.angle));
             }
 
             render();
